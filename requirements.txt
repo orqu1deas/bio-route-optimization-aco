@@ -1,0 +1,6 @@
+Flask
+pandas
+numpy
+geopandas
+folium
+openpyxl

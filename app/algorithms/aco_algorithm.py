@@ -3,7 +3,7 @@ import math
 import random
 import numpy as np
 import pandas as pd
-from distance import build_distance_matrix
+from .distance import build_distance_matrix
 
 # ₊˚ ‿︵‿︵‿︵୨୧ · · ♡ · · ୨୧‿︵‿︵‿︵ ˚₊
 # 1. Carga y construcción de la matriz de distancias
@@ -39,23 +39,49 @@ vehicles = {
 
 demands = [10] * n
 
+vehicle_experience = {
+    "Car_1": 0.9,
+    "Car_2": 0.6
+}
+
+open_time = [7] * n
+close_time = [20] * n
+service_time = [0.2] * n
+
+# Velocidades estimadas por cada hora
+def average_speed(hour):
+    if 7 <= hour < 9:
+        return 20
+    elif 9 <= hour < 14:
+        return 30
+    elif 14 <= hour < 19:
+        return 15
+    else:
+        return 40
 
 # Algoritmo
-def probabs(current, unvisited):
+def probabs(current, unvisited, car_name):
     probs = []
+    exp_level = vehicle_experience[car_name]
+
     for j in range(n):
         if j in unvisited:
+            noise = np.random.normal(loc = 0, scale = (1 - exp_level) * 0.15)
+            adjusted_dist = distance_matrix[current, j]
+
             tau = feromone_matrix[current, j] ** alpha
-            eta = (1 / distance_matrix[current, j]) ** beta
+            eta = (1 / adjusted_dist) ** beta
+
             probs.append(tau * eta)
         else:
             probs.append(0)
+
     probs = np.array(probs)
     probs = probs / probs.sum()
     return probs
 
-def select_next_city(current, unvisited):
-    probs = probabs(current, unvisited)
+def select_next_city(current, unvisited, car_name):
+    probs = probabs(current, unvisited, car_name)
     return np.random.choice(range(n), p = probs)
 
 def build_route_for_vehicles(vehicles, demands):
@@ -66,18 +92,36 @@ def build_route_for_vehicles(vehicles, demands):
     for car_name, car in vehicles.items():
         current_capacity = 0
         current_city = 0
+        current_time = 8.0
         while unvisited:
-            feasible = [j for j in unvisited if current_capacity + demands[j] <= car["capacity"]]
+            feasible = []
+            for j in unvisited:
+                if current_capacity + demands[j] <= car['capacity']:
+                    v = average_speed(current_time)
+                    travel_time = distance_matrix[current_city, j] / v
+                    arrival_time = current_time + travel_time
+
+                    if arrival_time <= close_time[j]:
+                        feasible.append((j, travel_time))
 
             if not feasible:
                 break
 
-            next_city = select_next_city(current_city, unvisited)
-            
+            next_city = select_next_city(current_city, unvisited, car_name)
+            v = average_speed(current_time)
+            travel_time = distance_matrix[current_city, next_city] / v
+            arrival_time = current_time + travel_time
+
+            current_time = max(arrival_time, open_time[next_city])
+            current_time += service_time[next_city]
+
             routes[car_name].append(next_city)
             current_capacity += demands[next_city]
             unvisited.remove(next_city)
             current_city = next_city
+
+            if current_time > 15:
+                break
 
     return routes
 
@@ -117,7 +161,7 @@ def aco_algorithm(iterations = 10, num_ants = 3):
 
             if distance < best_solution["Distance"]:
                 best_solution["Distance"] = distance
-                best_solution["Route"] = route
+                best_solution["Route"] = routes
 
         update_pheromones(ants)
 
@@ -130,4 +174,5 @@ def aco_algorithm(iterations = 10, num_ants = 3):
     return best_solution
 
 if __name__ == "__main__":
-    aco_algorithm()
+    best_solution = aco_algorithm()
+    print(best_solution)

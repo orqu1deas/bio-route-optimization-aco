@@ -43,6 +43,12 @@ def get_distance(coords_i, coords_j, method="auto"):
 
 def build_distance_matrix(ruta_excel, method="auto"):
     df = pd.read_excel(ruta_excel)
+
+    origin = df[df["Zona"] == "Blanca"]
+    other = df[df["Zona"] != "Blanca"]
+
+    df = pd.concat([origin, other], ignore_index=True)
+
     coords = list(zip(df["Longitud"], df["Latitud"]))
     n = len(coords)
     matrix = np.zeros((n, n))
@@ -57,7 +63,7 @@ def build_distance_matrix(ruta_excel, method="auto"):
                 matrix[i, j] = get_distance(coords[i], coords[j], method)
 
     dist_df = pd.DataFrame(matrix, columns=df["Nombre"], index=df["Nombre"])
-    dist_df.to_csv("distancias_viales.csv", index=True)
+    dist_df.to_csv("distances.csv", index=True)
     print("Matriz guardada: distancias_viales.csv")
 
     return dist_df

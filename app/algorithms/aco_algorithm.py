@@ -5,23 +5,46 @@ import numpy as np
 import pandas as pd
 from distance import build_distance_matrix
 
-# 1. Cargar y construimos la matriz de distancias
+# ₊˚ ‿︵‿︵‿︵୨୧ · · ♡ · · ୨୧‿︵‿︵‿︵ ˚₊
+# 1. Carga y construcción de la matriz de distancias
+# ₊˚ ‿︵‿︵‿︵୨୧ · · ♡ · · ୨୧‿︵‿︵‿︵ ˚₊
 ruta_excel = "app/data/data.xlsx"
 
-dist_df = build_distance_matrix(ruta_excel, method = "auto")
+construction = False
 
-distance_matrix = dist_df.to_numpy()
+if construction == True:
+    dist_df = build_distance_matrix(ruta_excel, method = "auto")
+    distance_matrix = dist_df.to_numpy(dtype=float)
+else:
+    dist_df = pd.read_csv("app/data/distances.csv", index_col=0)
+    distance_matrix = dist_df.to_numpy(dtype=float)
+
 np.fill_diagonal(distance_matrix, np.inf)
 
-# 2. Inicialización ACO
+
+# ₊˚ ‿︵‿︵‿︵୨୧ · · ♡ · · ୨୧‿︵‿︵‿︵ ˚₊
+#           2. Inicialización ACO
+# ₊˚ ‿︵‿︵‿︵୨୧ · · ♡ · · ୨୧‿︵‿︵‿︵ ˚₊
+
+# Información Básica
 n = len(distance_matrix)
 feromone_matrix = np.ones((n, n))
+
 alpha, beta, rho = 1, 2, 0.5
 
-def probabs(current, visited):
+vehicles = {
+    "Car_1": {"capacity": 1000, "load": 0, "route": []},
+    "Car_2": {"capacity": 1000,  "load": 0, "route": []},
+}
+
+demands = [10] * n
+
+
+# Algoritmo
+def probabs(current, unvisited):
     probs = []
     for j in range(n):
-        if j not in visited:
+        if j in unvisited:
             tau = feromone_matrix[current, j] ** alpha
             eta = (1 / distance_matrix[current, j]) ** beta
             probs.append(tau * eta)
@@ -31,43 +54,66 @@ def probabs(current, visited):
     probs = probs / probs.sum()
     return probs
 
-def select_next_city(current, visited):
-    probs = probabs(current, visited)
+def select_next_city(current, unvisited):
+    probs = probabs(current, unvisited)
     return np.random.choice(range(n), p = probs)
 
-def build_route(start=0):
-    route = [start]
-    while len(route) < n:
-        next_city = select_next_city(route[-1], route)
-        route.append(next_city)
-    return route
+def build_route_for_vehicles(vehicles, demands):
+    unvisited = set(range(len(distance_matrix)))
+    unvisited.remove(0)
+    routes = {v : [] for v in vehicles.keys()}
 
-def route_length(route):
-    length = 0
-    for i in range(len(route) - 1):
-        length += distance_matrix[route[i], route[i + 1]]
-    return length
+    for car_name, car in vehicles.items():
+        current_capacity = 0
+        current_city = 0
+        while unvisited:
+            feasible = [j for j in unvisited if current_capacity + demands[j] <= car["capacity"]]
 
-def update_pheromones(routes):
+            if not feasible:
+                break
+
+            next_city = select_next_city(current_city, unvisited)
+            
+            routes[car_name].append(next_city)
+            current_capacity += demands[next_city]
+            unvisited.remove(next_city)
+            current_city = next_city
+
+    return routes
+
+def total_distance(vehicle_routes):
+    total = 0
+    for route in vehicle_routes.values():
+        for i in range(len(route) - 1):
+            total += distance_matrix[route[i], route[i +1 ]]
+    return total
+
+def update_pheromones(vehicle_routes):
     global feromone_matrix
     # Evaporación
     feromone_matrix *= (1 - rho)
-    for r in routes:
-        L = route_length(r)
-        for i in range(len(r) - 1):
-            a, b = r[i], r[i + 1]
-            feromone_matrix[a, b] += 1 / L
+    
+    for routes in vehicle_routes:
+        print(routes)
+        L = total_distance(routes)
+        for car, route in routes.items():
+            for i in range(len(route) - 1):
+                a, b = route[i], route[i + 1]
+                feromone_matrix[a, b] += 1 / L
+                feromone_matrix[b, a] += 1 / L
 
 def aco_algorithm(iterations = 10, num_ants = 3):
     best_solution = {"Distance": float("inf"), "Route": []}
 
     for iteration in range(1, iterations + 1):
         print(f"\n===== ITERATION {iteration} =====")
-        ants = [build_route() for _ in range(num_ants)]
-
-        for idx, route in enumerate(ants, 1):
-            distance = route_length(route)
-            print(f"Ant {idx}: {route}, Distance = {distance:.2f}")
+        ants = [build_route_for_vehicles(vehicles, demands) for _ in range(num_ants)]
+        print(ants)
+        for idx, routes in enumerate(ants, 1):
+            distance = total_distance(routes)
+            print(f"Ant {idx}, Total Distance = {distance:2f}")
+            for car_name, route in routes.items():
+                print(f"          {car_name}: {route}")
 
             if distance < best_solution["Distance"]:
                 best_solution["Distance"] = distance
@@ -75,8 +121,13 @@ def aco_algorithm(iterations = 10, num_ants = 3):
 
         update_pheromones(ants)
 
+        print(f"Best distance so far: {best_solution['Distance']:.2f}")
+
     print("\nFinal pheromone matrix:\n", np.round(feromone_matrix, 3))
-    print(f"\nBest route found: {best_solution['Route']} "
-          f"with total distance = {best_solution['Distance']:.2f} km")
+    print(f"\nBest route found: \n{best_solution['Route']}")
+    print(f"Total distance = {best_solution['Distance']:.2f} km")
 
     return best_solution
+
+if __name__ == "__main__":
+    aco_algorithm()

@@ -3,216 +3,75 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>Optimización de Rutas ACO</title>
-    <!-- <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    />
-  -->
+    <title>Inicio | Bio Route Optimizer</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
     />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
 
   <body class="bg-light">
+    <!-- NAV -->
     <nav class="navbar navbar-dark bg-dark">
-      <button popovertarget="parametros-box" class="btn-nav">
-        ⚙️ Parámetros
-      </button>
-
-      <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1">MigAnt</span>
-      </div>
+      <a class="btn-nav" href="/" title="Inicio">🏠</a>
+      <a class="btn-nav" href="/edit" title="Editar rutas">✏️</a>
+      <a class="btn-nav" href="/genetic" title="Algoritmo genético">🧬</a>
+      <a class="btn-nav" href="/aco" title="Colonia de hormigas">🐜</a>
     </nav>
 
-    <div popover id="parametros-box" class="popover-box">
-      <button
-        popovertarget="parametros-box"
-        popovertargetaction="hide"
-        class="close-pop"
-      >
-        ✖
-      </button>
-      <h3>⚙️ Parámetros del algoritmo ACO</h3>
-
-      <div class="param-row">
-        <label for="alpha">α (alpha)</label>
-        <input
-          id="alpha"
-          type="number"
-          step="0.1"
-          value="1"
-          class="param-input"
-        />
-        <p class="param-desc">
-          Controla la <b>influencia de las feromonas</b> en la decisión del
-          camino. Cuanto mayor sea α, más sigue las rutas marcadas por otros
-          agentes.
-        </p>
-      </div>
-
-      <div class="param-row">
-        <label for="beta">β (beta)</label>
-        <input
-          id="beta"
-          type="number"
-          step="0.1"
-          value="2"
-          class="param-input"
-        />
-        <p class="param-desc">
-          Pondera la <b>importancia de la distancia o heurística</b>. Si β es
-          grande, el agente favorece caminos más cortos.
-        </p>
-      </div>
-
-      <div class="param-row">
-        <label for="rho">ρ (rho)</label>
-        <input
-          id="rho"
-          type="number"
-          step="0.1"
-          value="0.5"
-          class="param-input"
-        />
-        <p class="param-desc">
-          Determina la <b>tasa de evaporación</b> de las feromonas. Valores
-          bajos = las feromonas duran más tiempo.
-        </p>
-      </div>
-
-      <div class="param-row">
-        <label for="iterations">Iteraciones</label>
-        <input id="iterations" type="number" value="5" class="param-input" />
-        <p class="param-desc">
-          Número de veces que se repite el proceso de búsqueda de rutas.
-        </p>
-      </div>
-
-      <button
-        id="save-params"
-        popovertarget="parametros-box"
-        popovertargetaction="hide"
-        class="btn-save"
-      >
-        Guardar parámetros
-      </button>
-    </div>
-
+    <!-- CONTENIDO PRINCIPAL -->
     <div class="main-container">
       <div class="left-panel">
-        <div class="container-fluid">
-          <span class="navbar-brand mb-0 h1">🐜 ACO Route Optimizer</span>
-        </div>
-        <br />
-        <!-- Vehículos -->
-        <div class="card p-3 mb-3">
-          <h4>🚗 Vehículos</h4>
-          <div id="vehicle-list"></div>
-          <button class="btn btn-secondary mt-2" id="add-vehicle">
-            Agregar vehículo
-          </button>
-        </div>
+        <h1 style="color: #b71c1c; font-weight: 700">Bio Route Optimizer</h1>
+        <p style="margin-top: 10px; line-height: 1.5; color: #444">
+          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Aspernatur provident cumque tenetur temporibus molestias sit nam enim ipsum, accusamus blanditiis inventore magni amet ea corporis impedit unde voluptas nulla a.</b> (VRP).
+        </p>
 
-        <div class="text-center mb-3">
-          <button id="run-btn" class="btn btn-primary btn-lg">
-            Ejecutar algoritmo
-          </button>
+        <div class="card" style="margin-top: 25px">
+          <h3 style="color: #222">¿Qué deseas hacer?</h3>
+          <ul style="margin-top: 10px; list-style: none; padding-left: 0">
+            <li>
+              <b>Editar rutas:</b> carga y ajusta tu archivo Excel con los
+              puntos.
+            </li>
+            <li>
+              <b>Algoritmo genético:</b> explora soluciones basadas en
+              evolución.
+            </li>
+            <li>
+              <b>ACO:</b> simula el comportamiento cooperativo de hormigas.
+            </li>
+          </ul>
         </div>
       </div>
-      <div class="right-panel">
-        <div id="result" class="text-center fw-bold"></div>
-        <div id="routes" class="mt-4"></div>
-        <div id="map" class="mt-4" style="height: 600px"></div>
+
+      <div
+        class="right-panel"
+        style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        "
+      >
+        
+
+    </div>
+
+    <!-- PRELOADER -->
+    <div id="preloader">
+      <div class="loader">
+        <div class="ant-icon">🐜</div>
+        <p>Cargando entorno...</p>
       </div>
     </div>
+
     <script>
-      let vehicleCount = 0;
-      function addVehicleRow() {
-        vehicleCount++;
-        const div = document.createElement("div");
-        div.className = "row g-3 mb-2 vehicle-row";
-        div.innerHTML = `
-    <div class="forms-col">
-    <div class="col-md-3">
-      <h5>Nombre del vehículo:</h5>
-      <input type="text" class="form-control veh-name" value="Car_${vehicleCount}" placeholder="Ej. Car_1">
-    </div>
-
-    <div class="col-md-3">
-      <h5>Capacidad de carga (kg):</h5>
-      <input type="number" class="form-control veh-capacity" value="1000" placeholder="Ej. 1000">
-    </div>
-
-    <div class="col-md-3">
-      <h5>Experiencia (0 a 1):</h5>
-      <input type="number" step="0.1" class="form-control veh-exp" value="0.8" placeholder="Ej. 0.8">
-    </div>
-
-    <div class="col-md-2 d-flex align-items-center">
-      <button type="button" class="btn btn-delete">❌</button>
-    </div>
-    </div>
-
-  `;
-
-        // Agregar evento de eliminación al botón
-        div.querySelector(".btn-delete").addEventListener("click", () => {
-          div.remove();
-        });
-
-        document.getElementById("vehicle-list").appendChild(div);
-      }
-
-      $("#add-vehicle").click(addVehicleRow);
-      addVehicleRow(); // uno por defecto
-
-      $("#run-btn").click(async function () {
-        $("#result").text("Ejecutando algoritmo...");
-        $("#routes").empty();
-        $("#map").empty();
-
-        const vehicles = [];
-        $(".veh-name").each(function (i) {
-          vehicles.push({
-            name: $(".veh-name").eq(i).val(),
-            capacity: $(".veh-capacity").eq(i).val(),
-            experience: $(".veh-exp").eq(i).val(),
-          });
-        });
-
-        const payload = {
-          alpha: $("#alpha").val(),
-          beta: $("#beta").val(),
-          rho: $("#rho").val(),
-          iterations: $("#iterations").val(),
-          vehicles: vehicles,
-        };
-
-        const res = await fetch("/run_aco", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-
-        if (data.error) {
-          $("#result").text("Error: " + data.error);
-          return;
-        }
-
-        $("#result").html(
-          `<b>Distancia total óptima:</b> ${data.best_distance} km`
-        );
-        $("#map").html(data.map_html);
-
-        let html = "<h5 class='mt-4'>📋 Orden de visita:</h5>";
-        data.routes.forEach((r) => {
-          html += `<div class="card mt-2 p-2"><b>${r.vehicle}</b><pre>${r.order}</pre></div>`;
-        });
-        $("#routes").html(html);
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          document.getElementById("preloader").classList.add("fade-out");
+          document.body.classList.add("loaded");
+        }, 800);
       });
     </script>
   </body>

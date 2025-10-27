@@ -151,7 +151,7 @@ def aco_algorithm(distance_matrix, vehicles, demands,
     if close_time is None:
         close_time = [20] * n
     if service_time is None:
-        service_time = [0.2] * n
+        service_time = [0.15] * n
 
     best_solution = {"Distance": float("inf"), "Route": {}}
 

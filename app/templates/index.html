@@ -20,42 +20,29 @@
     </nav>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <div class="main-container">
-      <div class="left-panel">
-        <h1 style="color: #b71c1c; font-weight: 700">Bio Route Optimizer</h1>
-        <p style="margin-top: 10px; line-height: 1.5; color: #444">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Aspernatur provident cumque tenetur temporibus molestias sit nam enim ipsum, accusamus blanditiis inventore magni amet ea corporis impedit unde voluptas nulla a.</b> (VRP).
+      <div class="right-panel home-hero">
+        <img 
+    src="{{ url_for('static', filename='img/fondo-grid.gif') }}" 
+    alt="Fondo animado"
+    class="bg-gif"
+  />
+        <div class="overlay"></div>
+        <img
+          src="{{ url_for('static', filename='img/logo-empresa.png') }}"
+          alt="Logo"
+          class="hero-logo"
+        />
+        <h1 class="title-gradient">Bio Route Optimizer</h1>
+        <h2 class="hero-title">Distribuidora Don Pedro</h2>
+        <p class="hero-subtitle">Optimización Inteligente de la Última Milla</p>
+        <p class="intro-text">
+          Plataforma interactiva para la optimización inteligente de rutas de
+          distribución. Integra los algoritmos bioinspirados
+          <b>ACO (Ant Colony Optimization)</b> y
+          <b>GA (Genetic Algorithm)</b> para mejorar la eficiencia logística de
+          entregas urbanas.
         </p>
-
-        <div class="card" style="margin-top: 25px">
-          <h3 style="color: #222">¿Qué deseas hacer?</h3>
-          <ul style="margin-top: 10px; list-style: none; padding-left: 0">
-            <li>
-              <b>Editar rutas:</b> carga y ajusta tu archivo Excel con los
-              puntos.
-            </li>
-            <li>
-              <b>Algoritmo genético:</b> explora soluciones basadas en
-              evolución.
-            </li>
-            <li>
-              <b>ACO:</b> simula el comportamiento cooperativo de hormigas.
-            </li>
-          </ul>
-        </div>
       </div>
-
-      <div
-        class="right-panel"
-        style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-        "
-      >
-        
-
     </div>
 
     <!-- PRELOADER -->

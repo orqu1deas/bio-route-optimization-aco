@@ -21,7 +21,7 @@ def average_speed(hour):
         return 40
 
 # Fitness
-def fitness(individuo, distance_matrix, demands, capacity, penalty, start_hour=8):
+def fitness(individuo, distance_matrix, demands, capacity, penalty, start_hour=8, service_time=0.15):
     routes = []
     current_load = 0
     current_route = []
@@ -50,7 +50,7 @@ def fitness(individuo, distance_matrix, demands, capacity, penalty, start_hour=8
         for client in route:
             d = distance_matrix[prev_node, client]
             total += d
-            total_time += d / vel
+            total_time += d / vel + service_time
             prev_node = client
         d = distance_matrix[prev_node, 0]
         total += d
@@ -126,7 +126,7 @@ def GA(distance_matrix, demands, capacity=500,
     return best_solution
 
 # ₊˚ ‿︵‿︵‿︵୨୧ ✦ FITNESS con más de 1 vehículo ✦ ୨୧‿︵‿︵‿︵ ˚₊
-def fitness_multi_vehicle(individuo, distance_matrix, demands, vehicles, penalty, start_hour=8):
+def fitness_multi_vehicle(individuo, distance_matrix, demands, vehicles, penalty, start_hour=8, service_time=0.15):
     vehicle_names = list(vehicles.keys())
     routes = {v: [] for v in vehicle_names}
     current_vehicle = 0
@@ -164,7 +164,7 @@ def fitness_multi_vehicle(individuo, distance_matrix, demands, vehicles, penalty
         for client in route:
             d = distance_matrix[prev_node, client]
             total_cost += d
-            total_time += d / vel
+            total_time += d / vel + service_time
             prev_node = client
         d = distance_matrix[prev_node, 0]
         total_cost += d

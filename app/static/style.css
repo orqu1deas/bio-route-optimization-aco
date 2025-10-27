@@ -63,6 +63,124 @@ nav.navbar {
   flex-shrink: 3;
 }
 
+/* === HERO / PORTADA === */
+.home-hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* Fondo GIF */
+.bg-gif {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1;
+}
+
+/* Contenido */
+.hero-logo,
+.title-gradient,
+.hero-title,
+.hero-subtitle,
+.intro-text {
+  z-index: 2;
+}
+
+.home-hero .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45); /* capa oscura encima */
+  z-index: 1;
+}
+
+.hero-logo {
+  width: 180px;
+  height: auto;
+  z-index: 2;
+  margin-bottom: 20px;
+  animation: floatLogo 3s ease-in-out infinite;
+}
+
+.hero-title {
+  z-index: 2;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  margin-bottom: 8px;
+}
+
+.title-gradient {
+  z-index: 2;
+  font-size: 42px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #fff, #ffcccc, #fff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.hero-subtitle {
+  z-index: 2;
+  font-size: 20px;
+  font-weight: 500;
+  color: #ffebee;
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+  animation: fadeText 2s infinite;
+}
+
+.intro-text {
+  z-index: 2;
+  color: #f5f5f5;
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+/* === ANIMACIONES HERO === */
+@keyframes floatLogo {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes fadeText {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* === LAYOUT PRINCIPAL === */
 .main-container {
   display: flex;

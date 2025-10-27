@@ -1,20 +1,27 @@
 # 🐜 ACO Route Optimizer – Flask Web App
 
-Aplicación web desarrollada en **Flask (Python)** que determina la **ruta óptima entre múltiples puntos geográficos** a partir de datos extraídos de un archivo **Excel (latitud y longitud)**.  
-El sistema está diseñado para optimizar **rutas de distribución** dentro del estado de **Querétaro**, aplicando un algoritmo **bioinspirado (Ant Colony Optimization, ACO)**.
+Aplicación web desarrollada en **Flask (Python)** que determina la ruta óptima entre múltiples puntos geográficos a partir de datos extraídos de un archivo Excel (latitud y longitud).
+El sistema está diseñado para optimizar rutas de distribución urbana dentro del estado de Querétaro, aplicando dos algoritmos **bioinspirados**: Ant Colony Optimization **(ACO)** y Genetic Algorithm **(GA)**.
 
 ---
 
 ## 🚗 **Descripción general**
 
-La aplicación simula el comportamiento de **conductores-vehículos (hormigas)** que colaboran para encontrar las rutas más eficientes entre puntos de entrega.  
-Cada vehículo posee características configurables como:
+La aplicación busca simular el proceso de **entrega de productos en la última milla**, considerando restricciones reales como:
 
-- 🚘 **Capacidad de carga**
-- 🧠 **Nivel de experiencia del conductor**
-- ⏱️ **Ventanas de tiempo de servicio**
+- 🚘 **Capacidad de carga de los vehículos**
+- 🧠 **Nivel de experiencia de los conductores**
+- ⏱️ **Ventanas de tiempo para cada punto de entrega**
+  Estos parámetros permiten que el sistema adapte dinámicamente la asignación de rutas y decisiones de búsqueda según las condiciones operativas.
 
-Estos parámetros permiten que el sistema adapte las decisiones del algoritmo a distintos escenarios logísticos.
+---
+
+## 🗺️ Contexto aplicado
+
+El modelo se probó con el caso de Distribuidora Don Pedro, una PyME queretana dedicada a la distribución de productos cárnicos y lácteos.
+La empresa cuenta con **dos unidades (500 kg cada una)** y tres rutas principales que cubren zonas como Juriquilla, Milenio, Centro Sur, Felipe Carrillo Puerto y San José el Alto.
+
+Debido a la rotación de personal y limitación de unidades, el sistema busca minimizar la distancia total recorrida y optimizar los tiempos de entrega, integrando así una solución escalable para escenarios con recursos restringidos.
 
 ---
 
@@ -46,17 +53,29 @@ Este algoritmo evalúa múltiples variables en cada iteración, incluyendo:
 - **Evaporación (ρ – rho):** Tasa de disminución de feromonas a lo largo del tiempo.
 - **Número de iteraciones:** Cantidad de repeticiones del proceso de búsqueda.
 
-> Este método permite generar **rutas adaptativas y eficientes**, incluso en entornos con múltiples restricciones y combinaciones posibles.
+**📈 Ventaja:** alta velocidad de convergencia y desempeño estable.
+**❗ Restricción:** no permite sobrepasar los límites de tiempo definidos por las ventanas de servicio.
+
+### Genetic Algorithm (GA)
+
+El GA emplea un enfoque evolutivo que combina y muta posibles rutas para mejorar la eficiencia de cada generación. A diferencia del ACO, tolera pequeñas desviaciones en las restricciones de tiempo, lo que lo hace más flexible cuando no hay problema en terminar después del horario límite (p. ej., después de las 17:00).
+
+- Tamaño de población
+- Número de generaciones
+- Probabilidad de cruce
+- Probabilidad de mutación
+- Capacidad de cada vehículo (y múltiples vehículos si se usa la versión “multi-vehicle”)
+
+**📈 Ventaja:** permite soluciones más adaptativas cuando se busca equilibrio entre tiempo y costo.
+**❗ Restricción:** escenarios donde la puntualidad no sea una restricción rígida, priorizando la optimización global.
 
 ---
 
 ## 💻 **Interfaz web**
 
-Desarrollada en **Flask + HTML + JavaScript + CSS moderno**, con un diseño responsive.
-La interfaz permite:
+Desarrollada en **Flask + HTML + JavaScript + CSS moderno**, cuenta con una interfaz responsiva y funcional que permite:
 
-- Ingresar o cargar parámetros del algoritmo (α, β, ρ, iteraciones).
-- Agregar o eliminar vehículos dinámicamente.
-- Definir experiencia y capacidad de cada vehículo.
+- Seleccionar el algoritmo (ACO o GA).
+- Configurar parámetros de cada vehículo (capacidad, experiencia, ventana de tiempo).
 - Visualizar resultados en un **mapa geográfico interactivo (GeoPandas / Folium)**.
 - Obtener el **orden óptimo de visita** de cada vehículo.

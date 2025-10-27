@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Optimización de Rutas GA</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+
+  <body class="bg-light">
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-dark bg-dark">
+      <a class="btn-nav" href="/" title="Volver al inicio">🏠</a>
+      <a class="btn-nav" href="/edit" title="Editar rutas">✏️</a>
+      <a class="btn-nav" href="/genetic" title="Algoritmo genético">🧬</a>
+      <a class="btn-nav" href="/aco" title="Colonia de hormigas">🐜</a>
+      <button popovertarget="parametros-box" class="btn-nav">⚙️</button>
+    </nav>
+
+    <!-- CAJA DE PARÁMETROS -->
+    <div popover id="parametros-box" class="popover-box">
+      <button
+        popovertarget="parametros-box"
+        popovertargetaction="hide"
+        class="close-pop"
+      >
+        ✖
+      </button>
+      <h3>⚙️ Parámetros del Algoritmo Genético</h3>
+
+      <div class="param-row">
+        <label for="pop_size">Tamaño de población</label>
+        <input id="pop_size" type="number" value="80" class="param-input" />
+        <p class="param-desc">Número de individuos por generación.</p>
+      </div>
+
+      <div class="param-row">
+        <label for="generations">Generaciones</label>
+        <input id="generations" type="number" value="300" class="param-input" />
+        <p class="param-desc">Número de ciclos evolutivos.</p>
+      </div>
+
+      <div class="param-row">
+        <label for="prob_crossover">Probabilidad de cruce</label>
+        <input
+          id="prob_crossover"
+          type="number"
+          step="0.1"
+          value="0.9"
+          class="param-input"
+        />
+        <p class="param-desc">Probabilidad de combinar genes entre padres.</p>
+      </div>
+
+      <div class="param-row">
+        <label for="prob_mutation">Probabilidad de mutación</label>
+        <input
+          id="prob_mutation"
+          type="number"
+          step="0.1"
+          value="0.2"
+          class="param-input"
+        />
+        <p class="param-desc">
+          Probabilidad de alterar aleatoriamente una posición del individuo.
+        </p>
+      </div>
+
+      <button
+        id="save-params"
+        popovertarget="parametros-box"
+        popovertargetaction="hide"
+        class="btn-save"
+      >
+        Guardar parámetros
+      </button>
+    </div>
+
+    <!-- CUERPO PRINCIPAL -->
+    <div class="main-container">
+      <div class="left-panel">
+        <div class="container-fluid">
+          <span class="navbar-brand mb-0 h1">🧬 GA Route Optimizer</span>
+        </div>
+
+        <!-- Vehículos -->
+        <div class="card p-3 mb-3">
+          <h4>🚗 Vehículos</h4>
+          <div id="vehicle-list"></div>
+          <button class="btn btn-secondary mt-2" id="add-vehicle">
+            Agregar vehículo
+          </button>
+        </div>
+
+        <div class="text-center mb-3">
+          <button id="run-btn" class="btn btn-primary btn-lg">
+            Ejecutar algoritmo
+          </button>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div id="result" class="text-center fw-bold"></div>
+        <div id="routes" class="mt-4"></div>
+        <div id="map" class="mt-4" style="height: 600px"></div>
+      </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+      // === VEHÍCULOS ===
+      let vehicleCount = 0;
+      function addVehicleRow() {
+        vehicleCount++;
+        const div = document.createElement("div");
+        div.className = "row g-3 mb-2 vehicle-row";
+        div.innerHTML = `
+        <div class="forms-col">
+          <div class="col-md-4">
+            <h5>Nombre del vehículo:</h5>
+            <input type="text" class="form-control veh-name" value="Car_${vehicleCount}" placeholder="Ej. Car_1">
+          </div>
+          <div class="col-md-4">
+            <h5>Capacidad (kg):</h5>
+            <input type="number" class="form-control veh-capacity" value="1000">
+          </div>
+          <div class="col-md-2 d-flex align-items-center">
+            <button type="button" class="btn btn-delete">❌</button>
+          </div>
+        </div>`;
+        div
+          .querySelector(".btn-delete")
+          .addEventListener("click", () => div.remove());
+        document.getElementById("vehicle-list").appendChild(div);
+      }
+      $("#add-vehicle").click(addVehicleRow);
+      addVehicleRow();
+
+      // === EJECUCIÓN DEL GA ===
+      $("#run-btn").click(async function () {
+        $("#result").text("Ejecutando algoritmo genético...");
+        $("#routes").empty();
+        $("#map").empty();
+
+        const vehicles = [];
+        $(".veh-name").each(function (i) {
+          vehicles.push({
+            name: $(".veh-name").eq(i).val(),
+            capacity: $(".veh-capacity").eq(i).val(),
+          });
+        });
+
+        const payload = {
+          pop_size: $("#pop_size").val(),
+          generations: $("#generations").val(),
+          prob_crossover: $("#prob_crossover").val(),
+          prob_mutation: $("#prob_mutation").val(),
+          vehicles: vehicles,
+        };
+
+        const res = await fetch("/run_ga", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          $("#result").text("Error: " + data.error);
+          return;
+        }
+
+        $("#result").html(`
+          <b>Mejor costo total:</b> ${data.best_cost} km<br>
+          <b>Tiempo total:</b> ${data.best_time} horas
+        `);
+
+        let html = "<h5 class='mt-4'>📋 Rutas encontradas:</h5>";
+        data.routes.forEach((r) => {
+          html += `<div class="card mt-2 p-2"><b>${r.vehicle}</b><pre>${r.order}</pre></div>`;
+        });
+        $("#routes").html(html);
+
+        if (data.map_html) $("#map").html(data.map_html);
+      });
+    </script>
+
+    <!-- PRELOADER -->
+    <div id="preloader">
+      <div class="loader">
+        <div class="ant-icon">🧬</div>
+        <p>Evolucionando generaciones...</p>
+      </div>
+    </div>
+    <script>
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          document.getElementById("preloader").classList.add("fade-out");
+          document.body.classList.add("loaded");
+        }, 800);
+      });
+    </script>
+  </body>
+</html>

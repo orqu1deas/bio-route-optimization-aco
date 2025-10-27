@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>📍 edit de Zonas | Bio Route Optimizer</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+
+  <body class="bg-light">
+    <!-- NAV -->
+    <nav class="navbar navbar-dark bg-dark">
+      <a class="btn-nav" href="/" title="Inicio">🏠</a>
+      <a class="btn-nav" href="/edit" title="Editar rutas">✏️</a>
+      <a class="btn-nav" href="/genetic" title="Algoritmo genético">🧬</a>
+      <a class="btn-nav" href="/aco" title="Colonia de hormigas">🐜</a>
+      <a class="btn-nav" href="/edit" title="edit diario">📍</a>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="main-container">
+      <div class="left-panel">
+        <h2 style="color: #b71c1c; font-weight: 700">📅 Planificador Diario</h2>
+        <p style="margin-top: 10px; line-height: 1.5; color: #444">
+          Selecciona las <b>zonas</b> o <b>tiendas específicas</b> que visitarás
+          hoy. El sistema generará un nuevo archivo
+          <code>distances.csv</code> con solo los puntos elegidos.
+        </p>
+
+        <div class="card" style="margin-top: 20px; text-align: center">
+          <h4>🗺️ Zonas disponibles</h4>
+
+          <div
+            id="zones-container"
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: center;
+              margin-top: 10px;
+            "
+          >
+            <button class="zone-btn amarillo" data-zone="Amarillo">
+              🟨 Amarillo
+            </button>
+            <button class="zone-btn cafe" data-zone="Café">🟫 Café</button>
+            <button class="zone-btn gris" data-zone="Gris">⬜ Gris</button>
+            <button class="zone-btn rojo" data-zone="Rojo">🔴 Rojo</button>
+            <button class="zone-btn rosa" data-zone="Rosa">🌸 Rosa</button>
+            <button class="zone-btn verde" data-zone="Verde">🟩 Verde</button>
+            <button class="zone-btn azul" data-zone="Azul">🔵 Azul</button>
+          </div>
+
+          <textarea
+            id="custom-input"
+            placeholder="Escribe nombres o IDs de tiendas específicas (opcional, separadas por comas)..."
+            style="
+              margin-top: 20px;
+              width: 90%;
+              height: 80px;
+              border-radius: 8px;
+              border: 1px solid #e0b3b3;
+              padding: 10px;
+              font-family: 'Poppins';
+            "
+          ></textarea>
+
+          <button id="save-btn" class="btn-primary" style="margin-top: 20px">
+            💾 Guardar selección
+          </button>
+        </div>
+      </div>
+
+      <div class="right-panel" style="text-align: center">
+        <h3 style="color: #b71c1c; font-weight: 600">
+          📍 Resultado de la selección
+        </h3>
+        <p style="color: #555; margin-top: 10px">
+          Aquí aparecerá el resumen de tus zonas filtradas.
+        </p>
+        <div id="result" style="margin-top: 20px; font-weight: 600"></div>
+        <div id="map" style="margin-top: 25px; height: 550px"></div>
+      </div>
+    </div>
+
+    <!-- JS -->
+    <script>
+      const selectedZones = new Set();
+
+      // Toggle de zonas seleccionadas
+      $(".zone-btn").click(function () {
+        $(this).toggleClass("selected");
+        const zone = $(this).data("zone");
+        if (selectedZones.has(zone)) selectedZones.delete(zone);
+        else selectedZones.add(zone);
+      });
+
+      // Guardar selección
+      $("#save-btn").click(async function () {
+        const custom = $("#custom-input").val().trim();
+        const payload = {
+          zones: Array.from(selectedZones),
+          stores: custom ? custom.split(",").map((s) => s.trim()) : [],
+        };
+
+        $("#result").text("Procesando selección...");
+        const res = await fetch("/save_selection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (data.error) $("#result").html("❌ <b>Error:</b> " + data.error);
+        else {
+          $("#result").html(
+            `✅ <b>${data.count}</b> puntos filtrados. Archivo generado: <code>distances.csv</code>`
+          );
+          if (data.map_html) $("#map").html(data.map_html);
+        }
+      });
+    </script>
+
+    <!-- PRELOADER -->
+    <div id="preloader">
+      <div class="loader">
+        <div class="ant-icon">📍</div>
+        <p>Cargando edit...</p>
+      </div>
+    </div>
+
+    <script>
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          document.getElementById("preloader").classList.add("fade-out");
+          document.body.classList.add("loaded");
+        }, 800);
+      });
+    </script>
+
+    <style>
+      /* Botones de zonas (heredan del estilo principal) */
+      .zone-btn {
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        padding: 12px 18px;
+        margin: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
+      .zone-btn:hover {
+        transform: scale(1.05);
+      }
+      .amarillo {
+        background: #ffeb3b;
+        color: #333;
+      }
+      .cafe {
+        background: #6d4c41;
+      }
+      .gris {
+        background: #9e9e9e;
+      }
+      .rojo {
+        background: #e53935;
+      }
+      .rosa {
+        background: #f48fb1;
+      }
+      .verde {
+        background: #43a047;
+      }
+      .azul {
+        background: #1e88e5;
+      }
+      .zone-btn.selected {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.8),
+          0 0 5px rgba(183, 28, 28, 0.5) inset;
+        transform: scale(1.07);
+      }
+    </style>
+  </body>
+</html>
